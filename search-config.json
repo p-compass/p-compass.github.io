@@ -30,6 +30,18 @@
       "placement", "manpower", "hr services", "hr solutions", "hr consult",
       "talent solutions", "talent acquisition", "outsourcing", "hiring solutions"
     ],
+    "_industrial_note": "Drops manufacturing/plant/engineering 'operations' roles that match broad keywords but are irrelevant to back-office/customer/trading profiles. Title words matched on the job TITLE (high precision); phrases matched in the full DESCRIPTION.",
+    "exclude_industrial_titles": [
+      "manufacturing", "factory", "plant", "foundry", "refinery", "fabrication",
+      "boiler", "cnc", "welding", "welder", "fitter", "machinist", "shop floor",
+      "assembly line", "production line", "machine operator", "mechanical engineer",
+      "electrical engineer", "civil engineer", "instrumentation", "maintenance engineer",
+      "site engineer", "production"
+    ],
+    "exclude_industrial_jd_phrases": [
+      "plant operations", "factory operations", "manufacturing plant", "production plant",
+      "power plant", "bioenergy", "shop floor", "assembly line", "production line", "machine operator"
+    ],
     "exclude_when_no_experience_required": true
   },
 

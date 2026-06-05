@@ -88,6 +88,13 @@ def company_excluded(company, patterns):
     return any(p.lower() in c for p in patterns)
 
 
+def compile_words(words):
+    """Word-boundary regex from a list (avoids 'plant' matching 'implementation'). None if empty."""
+    if not words:
+        return None
+    return re.compile(r"\b(" + "|".join(re.escape(w) for w in words) + r")\b", re.I)
+
+
 def salary_min_monthly(display):
     """Lowest monthly ₹ implied by a formatted salary string, or None.
     Our formats: '₹9–14 LPA', '₹6 LPA', '₹20–35K/mo'. The min is the first number."""
@@ -304,16 +311,24 @@ def main():
     log(f"{calls} calls done ({errors} errored), {len(raw)} raw listings")
 
     kept = []
-    dropped_exp = dropped_agency = dropped_low_sal = 0
+    dropped_exp = dropped_agency = dropped_low_sal = dropped_industrial = 0
     min_years = f["min_experience_years"]
     sal_floor = f.get("min_salary_per_month", 0)
     agency_pats = f.get("exclude_companies_containing", [])
+    ind_title_rx = compile_words(f.get("exclude_industrial_titles", []))
+    ind_phrase_rx = compile_words(f.get("exclude_industrial_jd_phrases", []))
     for job in raw:
         title = job.get("job_title", "")
         if title_excluded(title, f["exclude_titles_containing"]):
             continue
         if company_excluded(job.get("employer_name", ""), agency_pats):
             dropped_agency += 1
+            continue
+        # drop manufacturing/plant/engineering roles: industrial word in TITLE,
+        # or a strong industrial phrase in the DESCRIPTION
+        if (ind_title_rx and ind_title_rx.search(title)) or \
+           (ind_phrase_rx and ind_phrase_rx.search(job.get("job_description") or "")):
+            dropped_industrial += 1
             continue
         if not within_days(job.get("job_posted_at_timestamp"), f["max_age_days"]):
             continue
@@ -345,8 +360,8 @@ def main():
     with_exp = sum(1 for j in kept if j["exp"] is not None)
     with_sal = sum(1 for j in kept if j["salary"] != "Not disclosed")
     log(f"wrote {len(kept)} jobs -> {OUTPUT_PATH.name} (of {len(raw)} raw; "
-        f"dropped: {dropped_agency} agency, {dropped_exp} <{min_years}yr, "
-        f"{dropped_low_sal} <₹{sal_floor//1000}K/mo; "
+        f"dropped: {dropped_agency} agency, {dropped_industrial} industrial, "
+        f"{dropped_exp} <{min_years}yr, {dropped_low_sal} <₹{sal_floor//1000}K/mo; "
         f"{with_exp} have exp, {with_sal} have salary)")
 
     render_dashboard(payload, cfg)
