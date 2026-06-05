@@ -5,7 +5,7 @@
 
   "analytics": {
     "_note": "Google Analytics 4. Paste your Measurement ID (looks like G-XXXXXXXXXX) to enable visit + Apply-click tracking. Leave blank to disable.",
-    "ga_measurement_id": ""
+    "ga_measurement_id": "G-R0S7QMVRNH"
   },
 
   "fetch": {
