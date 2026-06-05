@@ -72,7 +72,7 @@ def call_jsearch(query, country, page, api_key):
         f"{API_URL}?{urlencode(params)}",
         headers={"X-RapidAPI-Key": api_key, "X-RapidAPI-Host": API_HOST},
     )
-    with urlopen(req, timeout=30) as resp:
+    with urlopen(req, timeout=45) as resp:
         return json.loads(resp.read().decode("utf-8")).get("data", []) or []
 
 
@@ -80,6 +80,28 @@ def call_jsearch(query, country, page, api_key):
 def title_excluded(title, patterns):
     t = (title or "").lower()
     return any(p.lower() in t for p in patterns)
+
+
+def company_excluded(company, patterns):
+    """True if the employer name looks like a staffing/recruitment agency."""
+    c = (company or "").lower()
+    return any(p.lower() in c for p in patterns)
+
+
+def salary_min_monthly(display):
+    """Lowest monthly ₹ implied by a formatted salary string, or None.
+    Our formats: '₹9–14 LPA', '₹6 LPA', '₹20–35K/mo'. The min is the first number."""
+    if not display or display == "Not disclosed":
+        return None
+    m = re.search(r"([\d.]+)", display)
+    if not m:
+        return None
+    n = float(m.group(1))
+    if "LPA" in display:
+        return n * 100000 / 12      # lakhs/yr -> ₹/month
+    if "K/mo" in display:
+        return n * 1000             # thousands/month -> ₹/month
+    return None
 
 
 def passes_experience(job, min_years, exclude_no_exp):
@@ -273,7 +295,7 @@ def main():
         for page in range(1, pages + 1):
             try:
                 raw.extend(call_jsearch(q, f["country"], page, api_key))
-            except (HTTPError, URLError, TimeoutError) as e:
+            except (HTTPError, URLError, OSError) as e:  # OSError covers socket timeouts
                 errors += 1
                 log(f"  ! '{q}' p{page}: {e}")
             calls += 1
@@ -281,19 +303,29 @@ def main():
 
     log(f"{calls} calls done ({errors} errored), {len(raw)} raw listings")
 
-    kept, dropped_exp = [], 0
+    kept = []
+    dropped_exp = dropped_agency = dropped_low_sal = 0
     min_years = f["min_experience_years"]
+    sal_floor = f.get("min_salary_per_month", 0)
+    agency_pats = f.get("exclude_companies_containing", [])
     for job in raw:
         title = job.get("job_title", "")
         if title_excluded(title, f["exclude_titles_containing"]):
+            continue
+        if company_excluded(job.get("employer_name", ""), agency_pats):
+            dropped_agency += 1
             continue
         if not within_days(job.get("job_posted_at_timestamp"), f["max_age_days"]):
             continue
         norm = normalize(job)
         # 3-yr floor: drop only when experience is KNOWN and below the floor
-        # (unknown experience is kept, per project decision)
         if norm["exp"] is not None and norm["exp"] < min_years:
             dropped_exp += 1
+            continue
+        # salary floor: drop only when salary is STATED and below floor (keep undisclosed)
+        sal_min = salary_min_monthly(norm["salary"])
+        if sal_floor and sal_min is not None and sal_min < sal_floor:
+            dropped_low_sal += 1
             continue
         kept.append(norm)
 
@@ -312,8 +344,9 @@ def main():
         json.dump(payload, out, ensure_ascii=False, indent=2)
     with_exp = sum(1 for j in kept if j["exp"] is not None)
     with_sal = sum(1 for j in kept if j["salary"] != "Not disclosed")
-    log(f"wrote {len(kept)} jobs -> {OUTPUT_PATH.name} "
-        f"(of {len(raw)} raw; {dropped_exp} dropped <{min_years}yr; "
+    log(f"wrote {len(kept)} jobs -> {OUTPUT_PATH.name} (of {len(raw)} raw; "
+        f"dropped: {dropped_agency} agency, {dropped_exp} <{min_years}yr, "
+        f"{dropped_low_sal} <₹{sal_floor//1000}K/mo; "
         f"{with_exp} have exp, {with_sal} have salary)")
 
     render_dashboard(payload, cfg)

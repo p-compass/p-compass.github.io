@@ -18,10 +18,17 @@
     "min_experience_years": 3,
     "max_age_days": 60,
     "sort": "newest_first",
+    "min_salary_per_month": 50000,
+    "_min_salary_note": "Drops jobs whose STATED salary is below this (₹/month). Jobs with no salary stated are kept (we can't know).",
     "exclude_titles_containing": [
       "intern", "internship", "trainee", "fresher", "fresh graduate",
       "0-1 year", "0 to 1", "entry level", "entry-level", "junior",
       "apprentice", "volunteer", "walk-in", "walk in"
+    ],
+    "exclude_companies_containing": [
+      "consultanc", "consultant", "staffing", "recruiter", "recruitment",
+      "placement", "manpower", "hr services", "hr solutions", "hr consult",
+      "talent solutions", "talent acquisition", "outsourcing", "hiring solutions"
     ],
     "exclude_when_no_experience_required": true
   },
