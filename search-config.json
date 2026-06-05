@@ -1,0 +1,93 @@
+{
+  "_comment": "Project Compass — search/keyword config derived from 6 team CVs (Phase 1 output). Used by the daily fetch engine to query JSearch (Google for Jobs) and filter results. Review & approve before Phase 2.",
+  "version": 1,
+  "generated_for": "Punch / Market Pulse team — customer support, operations, telecalling/sales backgrounds",
+
+  "analytics": {
+    "_note": "Google Analytics 4. Paste your Measurement ID (looks like G-XXXXXXXXXX) to enable visit + Apply-click tracking. Leave blank to disable.",
+    "ga_measurement_id": ""
+  },
+
+  "fetch": {
+    "_note": "pages_per_query: how many result pages to pull per search (≈10 jobs/page). 3 ≈ 3x coverage. Cost: 35 queries × pages calls/day. Pro tier (10k/mo) easily covers 3. The JSEARCH_PAGES env var overrides this if set.",
+    "pages_per_query": 3
+  },
+
+  "filters": {
+    "country": "in",
+    "min_experience_years": 3,
+    "max_age_days": 60,
+    "sort": "newest_first",
+    "exclude_titles_containing": [
+      "intern", "internship", "trainee", "fresher", "fresh graduate",
+      "0-1 year", "0 to 1", "entry level", "entry-level", "junior",
+      "apprentice", "volunteer", "walk-in", "walk in"
+    ],
+    "exclude_when_no_experience_required": true
+  },
+
+  "seniority_in_scope": [
+    "executive", "senior executive", "associate", "senior associate",
+    "specialist", "team lead", "lead", "team leader", "manager",
+    "assistant manager", "head", "head of"
+  ],
+
+  "role_families": {
+    "customer_support": [
+      "customer support executive",
+      "customer support specialist",
+      "customer service executive",
+      "customer support associate",
+      "customer support team lead",
+      "customer support manager",
+      "head of customer support",
+      "customer experience manager"
+    ],
+    "customer_success": [
+      "customer success associate",
+      "customer success executive",
+      "customer success manager",
+      "onboarding specialist"
+    ],
+    "telecalling_and_sales": [
+      "telecaller",
+      "telecalling executive",
+      "telesales executive",
+      "inside sales executive",
+      "telecalling sales executive",
+      "tele sales team lead",
+      "inside sales team lead"
+    ],
+    "backend_operations": [
+      "operations executive",
+      "operations associate",
+      "backend operations executive",
+      "operations specialist",
+      "MIS executive",
+      "process associate",
+      "operations team lead",
+      "operations manager",
+      "head of operations"
+    ],
+    "fintech_broking_boost": {
+      "_note": "Optional domain boost — all 6 candidates come from a trading/broking platform; these searches raise relevance. Toggle 'enabled' to false to treat search as generic-only.",
+      "enabled": true,
+      "queries": [
+        "trading operations executive",
+        "broking customer support",
+        "stock market customer support",
+        "demat account support executive",
+        "equity dealer",
+        "KYC operations executive",
+        "fintech customer support"
+      ]
+    }
+  },
+
+  "locations": {
+    "_note": "Search pan-India; the dashboard's city filter narrows client-side. Team home cities listed for surfacing/labelling.",
+    "search_scope": "India",
+    "include_remote": true,
+    "team_home_cities": ["Bengaluru", "Mumbai", "Delhi NCR", "Hyderabad", "Pune", "Chennai", "Lucknow"]
+  }
+}

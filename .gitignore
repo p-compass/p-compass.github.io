@@ -1,0 +1,14 @@
+# Never commit candidate CVs — personal data, keep private
+CVs/
+
+# Internal brief and design artifacts — not part of the published site
+Project Reclaim*.md
+mockup.html
+*.png
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store

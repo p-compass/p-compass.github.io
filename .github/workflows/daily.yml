@@ -1,0 +1,42 @@
+name: Daily job refresh
+
+# Runs every day at 23:59 IST (18:29 UTC). GitHub cron is UTC and may be
+# delayed a few minutes under load. Also runnable on demand from the Actions tab.
+on:
+  schedule:
+    - cron: "29 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write   # allow the workflow to commit the refreshed index.html / jobs.json
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch jobs and build dashboard
+        env:
+          JSEARCH_API_KEY: ${{ secrets.JSEARCH_API_KEY }}
+          # pages-per-query comes from search-config.json (fetch.pages_per_query).
+          # Uncomment to override here if needed:  JSEARCH_PAGES: "3"
+        run: python3 fetch_jobs.py
+
+      - name: Commit refreshed dashboard
+        run: |
+          git config user.name  "compass-bot"
+          git config user.email "actions@github.com"
+          git add index.html jobs.json
+          if git diff --cached --quiet; then
+            echo "No changes today."
+          else
+            git commit -m "Daily refresh: $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git push
+          fi
