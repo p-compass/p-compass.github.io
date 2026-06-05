@@ -347,6 +347,14 @@ def main():
     kept = dedupe(kept)
     kept.sort(key=lambda j: j["posted_ts"], reverse=True)  # newest first
 
+    # SAFETY GUARD: never publish an empty/failed result over good data.
+    # If the fetch returned nothing (quota exhausted, bad key, API down), bail out
+    # WITHOUT touching jobs.json/index.html, and fail loudly so the run shows red.
+    if not kept:
+        log(f"ABORT: 0 jobs after filtering ({errors}/{calls} calls errored). "
+            f"Likely API quota/key/outage. Keeping existing data — not overwriting.")
+        sys.exit(1)
+
     now = datetime.now(timezone.utc)
     ist = now + timedelta(hours=5, minutes=30)
     payload = {
